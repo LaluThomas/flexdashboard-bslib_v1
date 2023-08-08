@@ -1,0 +1,95 @@
+---
+title: "Untitled"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source_code: "https://github.com/LaluThomas/flexdashboard-bslib_v1"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE, message=FALSE}
+#library(flexdashboard)
+library(tidyverse)
+library(palmerpenguins)
+library(paletteer)
+library(reactable)
+ggplot2::theme_set(theme_minimal())
+
+```
+
+
+# CRAN downloads
+
+```{r eval=FALSE}
+
+dl <- cranlogs::cran_downloads(c("palmerpenguins","distill","blogdown"),
+                               from = "2020-08-01",
+                               to = "2021-12-01") %>% 
+  as_tibble()
+
+write_csv(dl,"cran-log.csv")
+
+```
+
+```{r message=FALSE}
+dl <- read_csv("cran-log.csv")
+
+```
+
+## Column {data-width="650" .tabset}
+
+### Daily downloads (smoothed)
+
+```{r}
+
+# from https://github.com/hadley/cran-downloads/blob/master/server.R
+show_trend <- function(df) {
+  count_ts <- ts(df$count, frequency = 7)
+  stl <- tryCatch(
+    as.data.frame(stl(count_ts, "periodic")$time.series),
+    error = function(e) data.frame(trend = df$count, remainder = 0)
+  )
+  df$trend <- stl$trend
+  df$remainder <- stl$remainder
+  df
+}
+trend <- dl %>% group_by(package) %>% do(show_trend(.))
+
+ggplot(trend, aes(date, colour = fct_reorder2(package, date, count))) +
+  geom_linerange(aes(ymin = trend, ymax = trend + remainder), colour = "grey85", alpha = .5, lwd = 1) +
+  geom_line(aes(y = trend), lwd = 1) +
+  labs(y = "Daily downloads (smoothed)", color = "package", x = NULL) +
+  scale_color_paletteer_d("nationalparkcolors::Arches")
+
+```
+
+
+
+### Daily Downloads
+
+```{r}
+
+ggplot(dl,aes(date,count,
+              color=fct_reorder2(package,date,count)))+
+  geom_line()+
+  labs(y="Daily downloads",color="package",x=NULL)
+
+```
+
+## Column {data-width="350"}
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
+# Page 2
